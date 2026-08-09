@@ -42,7 +42,7 @@ export const App: React.FC = () => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const s = io(window.location.origin, {
+    const s = io("https://ipl-auction-backend.onrender.com", {
       transports: ["websocket", "polling"],
     });
 
