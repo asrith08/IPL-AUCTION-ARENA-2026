@@ -5,10 +5,18 @@ import { Server as SocketServer } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import apiRoutes from "./src/server/routes/api.ts";
 import { setupSocketHandler } from "./src/server/socket/handler.ts";
+import cors from "cors";
 
 async function startServer() {
   const app = express();
   const server = http.createServer(app);
+
+  // Enable CORS for Vercel frontend requests
+  app.use(cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+  }));
 
   const PORT = Number(process.env.PORT) || 3000;
 
