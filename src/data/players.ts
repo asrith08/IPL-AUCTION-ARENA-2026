@@ -1,4 +1,4 @@
-import { Player } from "../types/index.ts";
+import { Player } from "../types/index";
 
 export const MASTER_PLAYER_DATASET: Player[] = [
   // --- MARQUEE PLAYERS (SET 1 & 2) ---
