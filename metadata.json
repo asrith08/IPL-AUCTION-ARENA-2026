@@ -1,0 +1,6 @@
+{
+  "name": "IPL Auction Arena 2026",
+  "description": "Real-time multiplayer IPL 2026 Cricket Auction platform with team building, live bidding, WebRTC voice & text chat, playing XI selector, and advanced cricket analytics.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
