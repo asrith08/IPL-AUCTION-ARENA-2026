@@ -10,7 +10,7 @@ async function startServer() {
   const app = express();
   const server = http.createServer(app);
 
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   // Middleware
   app.use(express.json());
@@ -36,13 +36,11 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
+    // Health check endpoint for Render backend
+    app.get("/", (req, res) => {
+      res.send("🏏 IPL Auction Arena Backend is Live!");
     });
   }
-
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`🏏 IPL Auction Arena Server listening on http://0.0.0.0:${PORT}`);
   });
