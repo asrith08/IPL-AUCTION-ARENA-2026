@@ -100,7 +100,7 @@ export const App: React.FC = () => {
     maxSquadSize: number;
     timerDuration: number;
   }) => {
-    fetch("/api/rooms", {
+    fetch("https://ipl-auction-arena-2026.onrender.com/api/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -15,7 +15,7 @@ export const PublicRoomsModal: React.FC<Props> = ({ isOpen, onClose, onSelectRoo
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-      fetch("/api/rooms")
+     fetch("https://ipl-auction-arena-2026.onrender.com/api/rooms")
         .then((res) => res.json())
         .then((data) => {
           setRooms(data);
