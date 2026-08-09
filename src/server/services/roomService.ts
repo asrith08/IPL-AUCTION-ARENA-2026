@@ -155,7 +155,9 @@ export class RoomManager {
     } else {
       // Reconnection
       room.participants[userId].isDisconnected = false;
-      if (teamName) room.participants[userId].teamName = teamName;
+      if (userName && userName !== "Guest Manager") room.participants[userId].userName = userName;
+      if (teamName && teamName !== "Guest XI") room.participants[userId].teamName = teamName;
+      if (managerName && managerName !== "Guest") room.participants[userId].managerName = managerName;
     }
 
     return { room };

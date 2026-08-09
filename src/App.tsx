@@ -22,13 +22,23 @@ import { VoiceChat } from "./components/auction/VoiceChat.tsx";
 import { SquadView } from "./components/squad/SquadView.tsx";
 import { TeamAnalysisModal } from "./components/squad/TeamAnalysisModal.tsx";
 
-// Backend API/Socket base URL (Render hosted server)
+// Backend base URL (using render production URL or current window origin)
 const BACKEND_URL = "https://ipl-auction-arena-2026.onrender.com";
 
 export const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
-  const [userId] = useState<string>(() => "user_" + Math.random().toString(36).substring(2, 9));
+  const [userId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      let stored = localStorage.getItem("ipl_auction_user_id");
+      if (!stored) {
+        stored = "user_" + Math.random().toString(36).substring(2, 9);
+        localStorage.setItem("ipl_auction_user_id", stored);
+      }
+      return stored;
+    }
+    return "user_" + Math.random().toString(36).substring(2, 9);
+  });
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
 
   // Navigation & Modals
@@ -51,10 +61,63 @@ export const App: React.FC = () => {
 
     s.on("connect", () => {
       console.log("Connected to IPL Auction Socket Server");
+
+      const params = new URLSearchParams(window.location.search);
+      let targetRoomId = params.get("room");
+      if (!targetRoomId && typeof window !== "undefined") {
+        targetRoomId = localStorage.getItem("ipl_auction_active_room_id");
+      }
+
+      if (targetRoomId) {
+        let profile = { userName: "Guest Manager", teamName: "Guest XI", managerName: "Guest" };
+        try {
+          const saved = localStorage.getItem("ipl_auction_user_profile");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.userName) profile.userName = parsed.userName;
+            if (parsed.teamName) profile.teamName = parsed.teamName;
+            if (parsed.managerName) profile.managerName = parsed.managerName;
+          }
+        } catch (e) {}
+
+        s.emit("room:join", {
+          roomId: targetRoomId,
+          userId,
+          userName: profile.userName,
+          teamName: profile.teamName,
+          managerName: profile.managerName,
+        });
+
+        if (!params.get("room") && typeof window !== "undefined") {
+          window.history.replaceState({}, "", `${window.location.pathname}?room=${targetRoomId}`);
+        }
+      }
     });
 
     s.on("room:state", (updatedRoom: Room) => {
       setRoom(updatedRoom);
+      if (typeof window !== "undefined" && updatedRoom.id) {
+        localStorage.setItem("ipl_auction_active_room_id", updatedRoom.id);
+        const p = updatedRoom.participants[userId];
+        if (p) {
+          localStorage.setItem(
+            "ipl_auction_user_profile",
+            JSON.stringify({
+              userName: p.userName,
+              teamName: p.teamName,
+              managerName: p.managerName,
+            })
+          );
+        }
+      }
+    });
+
+    s.on("room:error", ({ message }: { message: string }) => {
+      if (message && (message.includes("not found") || message.includes("full"))) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("ipl_auction_active_room_id");
+        }
+      }
     });
 
     s.on("chat:message", (msg: ChatMessage) => {
@@ -74,19 +137,6 @@ export const App: React.FC = () => {
     });
 
     setSocket(s);
-
-    // Auto-join room from URL query if present
-    const params = new URLSearchParams(window.location.search);
-    const roomParam = params.get("room");
-    if (roomParam) {
-      s.emit("room:join", {
-        roomId: roomParam,
-        userId,
-        userName: "Guest Manager",
-        teamName: "Guest XI",
-        managerName: "Guest",
-      });
-    }
 
     return () => {
       s.disconnect();
@@ -112,14 +162,21 @@ export const App: React.FC = () => {
         ...data,
       }),
     })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! Status: ${res.status}`);
-        }
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((createdRoom: Room) => {
         setShowCreateModal(false);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("ipl_auction_active_room_id", createdRoom.id);
+          localStorage.setItem(
+            "ipl_auction_user_profile",
+            JSON.stringify({
+              userName: data.hostUserName,
+              teamName: data.hostTeamName,
+              managerName: data.hostManagerName,
+            })
+          );
+          window.history.replaceState({}, "", `${window.location.pathname}?room=${createdRoom.id}`);
+        }
         if (socket) {
           socket.emit("room:join", {
             roomId: createdRoom.id,
@@ -141,6 +198,18 @@ export const App: React.FC = () => {
   }) => {
     setShowJoinModal(false);
     setShowPublicModal(false);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("ipl_auction_active_room_id", data.roomId);
+      localStorage.setItem(
+        "ipl_auction_user_profile",
+        JSON.stringify({
+          userName: data.userName,
+          teamName: data.teamName,
+          managerName: data.managerName,
+        })
+      );
+      window.history.replaceState({}, "", `${window.location.pathname}?room=${data.roomId}`);
+    }
     if (socket) {
       socket.emit("room:join", {
         roomId: data.roomId,
@@ -178,7 +247,8 @@ export const App: React.FC = () => {
 
   const handleReturnHome = () => {
     setRoom(null);
-    if (typeof window !== "undefined" && window.location.search) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("ipl_auction_active_room_id");
       window.history.replaceState({}, "", window.location.pathname);
     }
   };
@@ -313,7 +383,7 @@ export const App: React.FC = () => {
             className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
               activeTab === "AUCTION"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                : "text-slate-400 hover:text-white bg-[#ffffff0d] border border-white/5"
+                : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
             }`}
           >
             🏏 Live Bidding Arena
@@ -323,7 +393,7 @@ export const App: React.FC = () => {
             className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
               activeTab === "SQUAD"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                : "text-slate-400 hover:text-white bg-[#ffffff0d] border border-white/5"
+                : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
             }`}
           >
             🛡️ My Squad & XI
