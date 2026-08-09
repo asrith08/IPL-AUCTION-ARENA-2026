@@ -22,6 +22,9 @@ import { VoiceChat } from "./components/auction/VoiceChat.tsx";
 import { SquadView } from "./components/squad/SquadView.tsx";
 import { TeamAnalysisModal } from "./components/squad/TeamAnalysisModal.tsx";
 
+// Backend API/Socket base URL (Render hosted server)
+const BACKEND_URL = "https://ipl-auction-arena-2026.onrender.com";
+
 export const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [room, setRoom] = useState<Room | null>(null);
@@ -42,7 +45,7 @@ export const App: React.FC = () => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const s = io(window.location.origin, {
+    const s = io(BACKEND_URL, {
       transports: ["websocket", "polling"],
     });
 
@@ -101,7 +104,7 @@ export const App: React.FC = () => {
     maxSquadSize: number;
     timerDuration: number;
   }) => {
-    fetch("/api/rooms", {
+    fetch(`${BACKEND_URL}/api/rooms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -109,7 +112,12 @@ export const App: React.FC = () => {
         ...data,
       }),
     })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((createdRoom: Room) => {
         setShowCreateModal(false);
         if (socket) {
@@ -121,7 +129,8 @@ export const App: React.FC = () => {
             managerName: data.hostManagerName,
           });
         }
-      });
+      })
+      .catch((err) => console.error("Error creating room:", err));
   };
 
   const handleJoinRoom = (data: {
@@ -304,7 +313,7 @@ export const App: React.FC = () => {
             className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
               activeTab === "AUCTION"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
+                : "text-slate-400 hover:text-white bg-[#ffffff0d] border border-white/5"
             }`}
           >
             🏏 Live Bidding Arena
@@ -314,7 +323,7 @@ export const App: React.FC = () => {
             className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
               activeTab === "SQUAD"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
-                : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
+                : "text-slate-400 hover:text-white bg-[#ffffff0d] border border-white/5"
             }`}
           >
             🛡️ My Squad & XI
