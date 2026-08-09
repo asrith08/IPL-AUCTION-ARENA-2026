@@ -7,11 +7,20 @@ import {
   SquadPlayer,
 } from "../../types/index.ts";
 import { MASTER_PLAYER_DATASET } from "../../data/players.ts";
+import { calculateBestXIAndAnalysis } from "./bestXIService.ts";
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
   private timers: Map<string, NodeJS.Timeout> = new Map();
   private transitionTimeouts: Map<string, NodeJS.Timeout> = new Map();
+
+  private generateSquadAnalyses(room: Room) {
+    const analyses = Object.values(room.participants).map((p) =>
+      calculateBestXIAndAnalysis(p.userId, p.teamName, p.squad)
+    );
+    analyses.sort((a, b) => b.overallScore - a.overallScore);
+    room.squadAnalyses = analyses;
+  }
 
   // Helper: Secure Random Shuffle
   private shuffleArray<T>(array: T[]): T[] {
@@ -287,6 +296,27 @@ export class RoomManager {
     }
 
     room.status = "COMPLETED";
+    this.generateSquadAnalyses(room);
+    return { room };
+  }
+
+  public updateParticipantName(
+    roomId: string,
+    userId: string,
+    userName?: string,
+    teamName?: string,
+    managerName?: string
+  ): { room?: Room; error?: string } {
+    const room = this.rooms.get(roomId);
+    if (!room) return { error: "Room not found" };
+
+    const participant = room.participants[userId];
+    if (!participant) return { error: "Participant not found" };
+
+    if (userName && userName.trim()) participant.userName = userName.trim();
+    if (teamName && teamName.trim()) participant.teamName = teamName.trim();
+    if (managerName && managerName.trim()) participant.managerName = managerName.trim();
+
     return { room };
   }
 
@@ -454,6 +484,7 @@ export class RoomManager {
         // Auction complete!
         currentRoom.status = "COMPLETED";
         currentRoom.currentPlayer = null;
+        this.generateSquadAnalyses(currentRoom);
         onTimerTick(currentRoom);
       } else {
         // Next player!

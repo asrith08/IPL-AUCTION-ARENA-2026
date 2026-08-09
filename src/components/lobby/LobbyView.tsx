@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Room, RoomParticipant } from "../../types/index.ts";
-import { Copy, Share2, Play, Users, Shield, CheckCircle2, UserX } from "lucide-react";
+import { Copy, Share2, Play, Users, Shield, CheckCircle2, UserX, Edit2, Check, X } from "lucide-react";
 
 interface Props {
   room: Room;
   currentUserId: string;
   onStartAuction: () => void;
   onKickParticipant: (targetUserId: string) => void;
+  onUpdateName?: (data: { userName?: string; teamName?: string; managerName?: string }) => void;
 }
 
 export const LobbyView: React.FC<Props> = ({
@@ -14,10 +15,29 @@ export const LobbyView: React.FC<Props> = ({
   currentUserId,
   onStartAuction,
   onKickParticipant,
+  onUpdateName,
 }) => {
   const [copied, setCopied] = useState(false);
+  const [editingSelf, setEditingSelf] = useState(false);
+  const me = room.participants[currentUserId];
+
+  const [editUserName, setEditUserName] = useState(me?.userName || "");
+  const [editTeamName, setEditTeamName] = useState(me?.teamName || "");
+  const [editManagerName, setEditManagerName] = useState(me?.managerName || "");
+
   const isHost = room.hostId === currentUserId;
   const participants: RoomParticipant[] = Object.values(room.participants);
+
+  const handleSaveName = () => {
+    if (onUpdateName) {
+      onUpdateName({
+        userName: editUserName,
+        teamName: editTeamName,
+        managerName: editManagerName,
+      });
+    }
+    setEditingSelf(false);
+  };
 
   const roomUrl = typeof window !== "undefined" ? `${window.location.origin}?room=${room.id}` : "";
 
@@ -119,41 +139,110 @@ export const LobbyView: React.FC<Props> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {participants.map((p) => (
-              <div
-                key={p.userId}
-                className="flex items-center justify-between rounded-xl border border-white/5 bg-white/5 p-4 hover:border-white/10 transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 font-black italic text-orange-400 border border-white/10">
-                    {p.userName.substring(0, 2).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5 font-bold text-sm text-white">
-                      {p.teamName}
-                      {p.isHost && (
-                        <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-black text-orange-400 border border-orange-500/30 uppercase tracking-widest">
-                          HOST
-                        </span>
-                      )}
+            {participants.map((p) => {
+              const isMe = p.userId === currentUserId;
+              return (
+                <div
+                  key={p.userId}
+                  className="rounded-xl border border-white/5 bg-white/5 p-4 hover:border-white/10 transition space-y-3"
+                >
+                  {isMe && editingSelf ? (
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-bold text-orange-400 uppercase tracking-widest">
+                        Edit Your Name & Team
+                      </div>
+                      <input
+                        type="text"
+                        value={editTeamName}
+                        onChange={(e) => setEditTeamName(e.target.value)}
+                        placeholder="Team Name (e.g., Chennai Super Kings)"
+                        className="w-full rounded-lg bg-black/50 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                      />
+                      <input
+                        type="text"
+                        value={editManagerName}
+                        onChange={(e) => setEditManagerName(e.target.value)}
+                        placeholder="Manager Name"
+                        className="w-full rounded-lg bg-black/50 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                      />
+                      <input
+                        type="text"
+                        value={editUserName}
+                        onChange={(e) => setEditUserName(e.target.value)}
+                        placeholder="User Display Name"
+                        className="w-full rounded-lg bg-black/50 border border-white/20 px-3 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-orange-500"
+                      />
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={handleSaveName}
+                          className="flex items-center gap-1 rounded-md bg-orange-500 px-3 py-1 text-[11px] font-bold text-black hover:bg-orange-400 transition uppercase"
+                        >
+                          <Check className="h-3 w-3" /> Save
+                        </button>
+                        <button
+                          onClick={() => setEditingSelf(false)}
+                          className="flex items-center gap-1 rounded-md bg-white/10 px-3 py-1 text-[11px] font-bold text-slate-300 hover:bg-white/20 transition uppercase"
+                        >
+                          <X className="h-3 w-3" /> Cancel
+                        </button>
+                      </div>
                     </div>
-                    <div className="text-xs text-slate-400">
-                      Manager: {p.managerName} • Purse: ₹{p.purseRemaining.toFixed(2)} Cr
-                    </div>
-                  </div>
-                </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/10 font-black italic text-orange-400 border border-white/10">
+                          {p.userName.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1.5 font-bold text-sm text-white">
+                            {p.teamName}
+                            {p.isHost && (
+                              <span className="rounded bg-orange-500/20 px-1.5 py-0.5 text-[9px] font-black text-orange-400 border border-orange-500/30 uppercase tracking-widest">
+                                HOST
+                              </span>
+                            )}
+                            {isMe && (
+                              <span className="rounded bg-blue-500/20 px-1.5 py-0.5 text-[9px] font-black text-blue-400 border border-blue-500/30 uppercase tracking-widest">
+                                YOU
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-slate-400">
+                            Manager: {p.managerName} • Purse: ₹{p.purseRemaining.toFixed(2)} Cr
+                          </div>
+                        </div>
+                      </div>
 
-                {isHost && !p.isHost && (
-                  <button
-                    onClick={() => onKickParticipant(p.userId)}
-                    title="Kick Participant"
-                    className="rounded-lg p-2 text-red-400 hover:bg-red-950/50 hover:text-red-300 transition"
-                  >
-                    <UserX className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+                      <div className="flex items-center gap-1">
+                        {isMe && (
+                          <button
+                            onClick={() => {
+                              setEditUserName(p.userName);
+                              setEditTeamName(p.teamName);
+                              setEditManagerName(p.managerName);
+                              setEditingSelf(true);
+                            }}
+                            title="Edit Display Name & Team"
+                            className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white transition"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                        )}
+                        {isHost && !p.isHost && (
+                          <button
+                            onClick={() => onKickParticipant(p.userId)}
+                            title="Kick Participant"
+                            className="rounded-lg p-2 text-red-400 hover:bg-red-950/50 hover:text-red-300 transition"
+                          >
+                            <UserX className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

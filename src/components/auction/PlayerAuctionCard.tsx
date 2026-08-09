@@ -1,6 +1,6 @@
-import React from "react";
-import { Player, Room } from "../../types/index.ts";
-import { Clock, Shield, Award, Activity, Flame, Zap, Home } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Player, Room, TeamAnalysisScore } from "../../types/index.ts";
+import { Clock, Shield, Award, Activity, Flame, Zap, Home, Trophy } from "lucide-react";
 
 interface Props {
   player: Player | null;
@@ -9,30 +9,155 @@ interface Props {
 }
 
 export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome }) => {
+  const [fetchedAnalyses, setFetchedAnalyses] = useState<TeamAnalysisScore[]>([]);
+
+  useEffect(() => {
+    if (
+      (room.status === "COMPLETED" || room.status === "ENDED") &&
+      (!room.squadAnalyses || room.squadAnalyses.length === 0)
+    ) {
+      fetch(`/api/analysis/${room.id}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.rankings) {
+            setFetchedAnalyses(data.rankings);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [room.status, room.id, room.squadAnalyses]);
+
   if (!player || room.status === "COMPLETED" || room.status === "ENDED") {
+    const analyses =
+      room.squadAnalyses && room.squadAnalyses.length > 0
+        ? room.squadAnalyses
+        : fetchedAnalyses;
+
     return (
-      <div className="flex h-96 items-center justify-center rounded-[2rem] border border-white/10 bg-[#0D121F] p-8 text-center shadow-2xl">
-        <div>
-          <Shield className="mx-auto h-12 w-12 text-orange-500 mb-3 animate-pulse" />
-          <h2 className="text-xl sm:text-2xl font-black italic uppercase tracking-wider text-white">
+      <div className="rounded-[2rem] border border-white/10 bg-[#0D121F] p-6 shadow-2xl space-y-6">
+        <div className="text-center border-b border-white/10 pb-5">
+          <Shield className="mx-auto h-12 w-12 text-orange-500 mb-2 animate-pulse" />
+          <h2 className="text-2xl sm:text-3xl font-black italic uppercase tracking-wider text-white">
             AUCTION CONCLUDED
           </h2>
-          <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto">
-            All players have been auctioned or the live session has been officially ended by the host.
-          </p>
-          <p className="text-xs text-orange-400 font-bold mt-3 uppercase tracking-widest">
-            Check "My Squad & XI" to view final rosters & AI Team Analysis
+          <p className="text-xs text-slate-400 mt-1 max-w-lg mx-auto">
+            All players have been auctioned. AI Team & Best Playing XI Analysis generated for every franchise squad.
           </p>
           {onReturnHome && (
             <button
               onClick={onReturnHome}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-black uppercase italic tracking-wider text-black shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-black uppercase italic tracking-wider text-black shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition"
             >
               <Home className="h-4 w-4" />
               Return to Home
             </button>
           )}
         </div>
+
+        {/* Squad XI Analysis Cards for ALL Teams */}
+        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+          <h3 className="text-xs font-black uppercase tracking-widest text-orange-400 flex items-center gap-2">
+            <Trophy className="h-4 w-4" /> Franchise Squad XI Analysis & Rankings ({analyses.length} Teams)
+          </h3>
+
+          {analyses.length === 0 ? (
+            <div className="text-center py-8 text-slate-500 text-xs">
+              Calculating final team ratings & Best Playing XIs...
+            </div>
+          ) : (
+            analyses.map((team, idx) => (
+              <div key={team.userId || idx} className="rounded-2xl border border-white/10 bg-white/5 p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500/20 text-orange-400 font-mono font-black text-xs border border-orange-500/30">
+                      #{idx + 1}
+                    </span>
+                    <div>
+                      <h4 className="text-lg font-black text-white italic uppercase">{team.teamName}</h4>
+                      <p className="text-xs text-emerald-400 font-semibold">{team.verdict}</p>
+                    </div>
+                  </div>
+                  <div className="text-right bg-black/40 px-4 py-2 rounded-xl border border-white/10">
+                    <div className="text-[10px] text-slate-400 uppercase font-bold">Overall Score</div>
+                    <div className="text-2xl font-black text-orange-400">{team.overallScore} <span className="text-xs font-normal text-slate-400">/100</span></div>
+                  </div>
+                </div>
+
+                {/* Category Scores */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  <div className="bg-black/30 p-2.5 rounded-lg border border-white/5">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold">Batting</span>
+                    <div className="font-bold text-orange-400">{team.battingScore}/100</div>
+                  </div>
+                  <div className="bg-black/30 p-2.5 rounded-lg border border-white/5">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold">Bowling</span>
+                    <div className="font-bold text-orange-400">{team.bowlingScore}/100</div>
+                  </div>
+                  <div className="bg-black/30 p-2.5 rounded-lg border border-white/5">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold">Openers</span>
+                    <div className="font-bold text-orange-400">{team.openersScore}/100</div>
+                  </div>
+                  <div className="bg-black/30 p-2.5 rounded-lg border border-white/5">
+                    <span className="text-slate-400 text-[10px] uppercase font-bold">Spin/Pace</span>
+                    <div className="font-bold text-orange-400">{team.spinScore}/{team.paceScore}</div>
+                  </div>
+                </div>
+
+                {/* Strengths & Weaknesses */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  {team.strengths && team.strengths.length > 0 && (
+                    <div className="bg-green-950/20 border border-green-500/20 rounded-xl p-3 space-y-1">
+                      <span className="text-[10px] uppercase font-black text-green-400 tracking-wider">Strengths</span>
+                      <ul className="list-disc list-inside text-slate-300 text-[11px] space-y-0.5">
+                        {team.strengths.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {team.weaknesses && team.weaknesses.length > 0 && (
+                    <div className="bg-red-950/20 border border-red-500/20 rounded-xl p-3 space-y-1">
+                      <span className="text-[10px] uppercase font-black text-red-400 tracking-wider">Weaknesses</span>
+                      <ul className="list-disc list-inside text-slate-300 text-[11px] space-y-0.5">
+                        {team.weaknesses.map((w, i) => (
+                          <li key={i}>{w}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Best Playing XI Roster */}
+                {team.bestXI && team.bestXI.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <span className="text-[10px] uppercase font-black text-slate-400 tracking-wider">Recommended Best Playing XI ({team.bestXI.length} Players)</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {team.bestXI.map((p) => (
+                        <span key={p.id} className="inline-flex items-center gap-1 bg-black/60 border border-white/10 rounded-lg px-2.5 py-1 text-[11px] text-slate-200">
+                          <span className="font-bold text-orange-400">{p.name}</span>
+                          <span className="text-[9px] px-1 bg-white/10 rounded text-slate-400">{p.role}</span>
+                          {p.isOverseas && <span className="text-[9px] text-blue-400 font-bold">✈</span>}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {onReturnHome && (
+          <div className="text-center pt-2">
+            <button
+              onClick={onReturnHome}
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-xs font-black uppercase italic tracking-wider text-black shadow-[0_0_20px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition"
+            >
+              <Home className="h-4 w-4" />
+              Return to Home
+            </button>
+          </div>
+        )}
       </div>
     );
   }

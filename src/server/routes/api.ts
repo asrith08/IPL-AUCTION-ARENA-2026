@@ -124,12 +124,18 @@ router.get("/analysis/:roomId", (req: Request, res: Response) => {
     return;
   }
 
+  if (room.squadAnalyses && room.squadAnalyses.length > 0) {
+    res.json({ roomId: room.id, roomName: room.name, rankings: room.squadAnalyses });
+    return;
+  }
+
   const analyses = Object.values(room.participants).map((p) =>
     calculateBestXIAndAnalysis(p.userId, p.teamName, p.squad)
   );
 
   // Rank teams by overall score descending
   analyses.sort((a, b) => b.overallScore - a.overallScore);
+  room.squadAnalyses = analyses;
 
   res.json({ roomId: room.id, roomName: room.name, rankings: analyses });
 });

@@ -42,9 +42,10 @@ export const App: React.FC = () => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const s = io("https://ipl-auction-arena-2026.onrender.com", {
-  transports: ["websocket", "polling"],
-});
+    const s = io(window.location.origin, {
+      transports: ["websocket", "polling"],
+    });
+
     s.on("connect", () => {
       console.log("Connected to IPL Auction Socket Server");
     });
@@ -100,7 +101,7 @@ export const App: React.FC = () => {
     maxSquadSize: number;
     timerDuration: number;
   }) => {
-    fetch("https://ipl-auction-arena-2026.onrender.com/api/rooms", {
+    fetch("/api/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -179,6 +180,20 @@ export const App: React.FC = () => {
     }
   };
 
+  const handleUpdateName = (data: {
+    userName?: string;
+    teamName?: string;
+    managerName?: string;
+  }) => {
+    if (socket && room) {
+      socket.emit("participant:update_name", {
+        roomId: room.id,
+        userId,
+        ...data,
+      });
+    }
+  };
+
   const handlePlaceBid = (amount?: number) => {
     if (socket && room) {
       socket.emit("auction:bid", { roomId: room.id, userId, amount });
@@ -252,6 +267,7 @@ export const App: React.FC = () => {
           currentUserId={userId}
           onStartAuction={handleStartAuction}
           onKickParticipant={handleKickParticipant}
+          onUpdateName={handleUpdateName}
         />
 
         <PlayerDatabaseModal

@@ -166,6 +166,37 @@ export function setupSocketHandler(io: Server) {
       }
     );
 
+    // Participant Update Name Event
+    socket.on(
+      "participant:update_name",
+      ({
+        roomId,
+        userId,
+        userName,
+        teamName,
+        managerName,
+      }: {
+        roomId: string;
+        userId: string;
+        userName?: string;
+        teamName?: string;
+        managerName?: string;
+      }) => {
+        const { room, error } = roomManager.updateParticipantName(
+          roomId,
+          userId,
+          userName,
+          teamName,
+          managerName
+        );
+        if (error || !room) {
+          socket.emit("room:error", { message: error || "Failed to update name" });
+          return;
+        }
+        io.to(roomId).emit("room:state", room);
+      }
+    );
+
     // Bidding Event
     socket.on(
       "auction:bid",

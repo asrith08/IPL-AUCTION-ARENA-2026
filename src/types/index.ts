@@ -131,6 +131,7 @@ export interface Room {
   history: Bid[];
   soldPlayers: Array<{ player: Player; buyerId: string; buyerTeam: string; price: number }>;
   unsoldPlayers: Player[];
+  squadAnalyses?: TeamAnalysisScore[];
   createdAt: number;
 }
 
