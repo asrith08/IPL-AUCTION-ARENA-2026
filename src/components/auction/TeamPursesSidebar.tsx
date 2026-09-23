@@ -7,7 +7,7 @@ interface Props {
   currentUserId: string;
 }
 
-export const TeamsPurchasedPlayers: React.FC<Props> = ({ room, currentUserId }) => {
+export const TeamPursesSidebar: React.FC<Props> = ({ room, currentUserId }) => {
   const participants: RoomParticipant[] = Object.values(room.participants);
   // Default to showing all teams, or filter by specific participant
   const [selectedTeamFilter, setSelectedTeamFilter] = useState<string>("ALL");
