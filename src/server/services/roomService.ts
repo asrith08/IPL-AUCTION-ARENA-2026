@@ -83,8 +83,45 @@ export class RoomManager {
       squad: [],
     };
 
-    // Shuffled auction queue guarantee: First player is random, NO REPEAT until pool exhausted!
-    const shuffledQueue = this.shuffleArray(MASTER_PLAYER_DATASET);
+    // Marquee & High-Profile player pool guarantee:
+    // Marquee players appear first in randomized order before regular players.
+    const MARQUEE_NAMES = new Set([
+      "Virat Kohli",
+      "Rohit Sharma",
+      "Travis Head",
+      "Vaibhav Suryavanshi",
+      "Abhishek Sharma",
+      "Jasprit Bumrah",
+      "Rishabh Pant",
+      "Heinrich Klaasen",
+      "Pat Cummins",
+      "Shreyas Iyer",
+      "Jos Buttler",
+      "KL Rahul",
+      "Mitchell Starc",
+      "Rashid Khan",
+      "Arshdeep Singh",
+      "MS Dhoni",
+      "Hardik Pandya",
+      "Suryakumar Yadav",
+      "Shubman Gill",
+      "Yashasvi Jaiswal",
+      "Sunil Narine",
+      "Nicholas Pooran",
+      "Glenn Maxwell",
+      "Ravindra Jadeja",
+      "Rinku Singh",
+    ]);
+
+    const isMarquee = (p: Player) =>
+      MARQUEE_NAMES.has(p.name) || p.category === "MARQUEE" || p.tier === "MARQUEE";
+
+    const marqueePool = MASTER_PLAYER_DATASET.filter(isMarquee);
+    const regularPool = MASTER_PLAYER_DATASET.filter((p) => !isMarquee(p));
+
+    const shuffledMarquee = this.shuffleArray(marqueePool);
+    const shuffledRegular = this.shuffleArray(regularPool);
+    const shuffledQueue = [...shuffledMarquee, ...shuffledRegular];
 
     const room: Room = {
       id: roomId,

@@ -35,19 +35,19 @@ export const LandingPage: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={onOpenDatabase}
-              className="hidden sm:inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-white/10 transition"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-white/10 bg-white/5 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-white/10 transition"
             >
-              <Globe className="h-4 w-4 text-orange-400" />
-              Player Database
+              <Globe className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-400" />
+              <span>Player DB</span>
             </button>
             <button
               onClick={onCreateRoom}
-              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2 text-xs font-black uppercase italic text-black shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl bg-orange-500 px-3.5 sm:px-5 py-2 text-[11px] sm:text-xs font-black uppercase italic text-black shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition"
             >
-              <Zap className="h-4 w-4" />
+              <Zap className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Create Room
             </button>
           </div>

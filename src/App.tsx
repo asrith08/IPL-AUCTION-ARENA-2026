@@ -14,16 +14,13 @@ import { LobbyView } from "./components/lobby/LobbyView.tsx";
 import { AuctionHeader } from "./components/auction/AuctionHeader.tsx";
 import { PlayerAuctionCard } from "./components/auction/PlayerAuctionCard.tsx";
 import { BidActionBar } from "./components/auction/BidActionBar.tsx";
-import { UpcomingPlayers } from "./components/auction/UpcomingPlayers.tsx";
+import { TeamsPurchasedPlayers } from "./components/auction/TeamsPurchasedPlayers.tsx";
 import { TeamPursesSidebar } from "./components/auction/TeamPursesSidebar.tsx";
 import { AuctionChat } from "./components/auction/AuctionChat.tsx";
 import { VoiceChat } from "./components/auction/VoiceChat.tsx";
 
 import { SquadView } from "./components/squad/SquadView.tsx";
 import { TeamAnalysisModal } from "./components/squad/TeamAnalysisModal.tsx";
-
-// Backend base URL (using render production URL or current window origin)
-const BACKEND_URL = "https://ipl-auction-arena-2026.onrender.com";
 
 export const App: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -55,7 +52,7 @@ export const App: React.FC = () => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const s = io(BACKEND_URL, {
+    const s = io(window.location.origin, {
       transports: ["websocket", "polling"],
     });
 
@@ -154,7 +151,7 @@ export const App: React.FC = () => {
     maxSquadSize: number;
     timerDuration: number;
   }) => {
-    fetch(`${BACKEND_URL}/api/rooms`, {
+    fetch("/api/rooms", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -186,8 +183,7 @@ export const App: React.FC = () => {
             managerName: data.hostManagerName,
           });
         }
-      })
-      .catch((err) => console.error("Error creating room:", err));
+      });
   };
 
   const handleJoinRoom = (data: {
@@ -249,7 +245,9 @@ export const App: React.FC = () => {
     setRoom(null);
     if (typeof window !== "undefined") {
       localStorage.removeItem("ipl_auction_active_room_id");
-      window.history.replaceState({}, "", window.location.pathname);
+      if (window.location.search) {
+        window.history.replaceState({}, "", window.location.pathname);
+      }
     }
   };
 
@@ -265,6 +263,17 @@ export const App: React.FC = () => {
     managerName?: string;
   }) => {
     if (socket && room) {
+      const me = room.participants[userId];
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "ipl_auction_user_profile",
+          JSON.stringify({
+            userName: data.userName || me?.userName || "Guest Manager",
+            teamName: data.teamName || me?.teamName || "Guest XI",
+            managerName: data.managerName || me?.managerName || "Guest",
+          })
+        );
+      }
       socket.emit("participant:update_name", {
         roomId: room.id,
         userId,
@@ -348,11 +357,6 @@ export const App: React.FC = () => {
           onKickParticipant={handleKickParticipant}
           onUpdateName={handleUpdateName}
         />
-
-        <PlayerDatabaseModal
-          isOpen={showDatabaseModal}
-          onClose={() => setShowDatabaseModal(false)}
-        />
       </div>
     );
   }
@@ -376,11 +380,11 @@ export const App: React.FC = () => {
       />
 
       {/* Navigation Sub-Bar */}
-      <div className="border-b border-white/10 bg-[#080C16] px-6 py-2 flex items-center justify-between text-xs z-10">
-        <div className="flex items-center gap-2">
+      <div className="border-b border-white/10 bg-[#080C16] px-3 sm:px-6 py-2 flex flex-wrap items-center justify-between gap-2 text-xs z-10">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={() => setActiveTab("AUCTION")}
-            className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
+            className={`rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-black uppercase italic tracking-wider transition-all ${
               activeTab === "AUCTION"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
                 : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
@@ -390,7 +394,7 @@ export const App: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab("SQUAD")}
-            className={`rounded-lg px-4 py-2 font-black uppercase italic tracking-wider transition-all ${
+            className={`rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-black uppercase italic tracking-wider transition-all ${
               activeTab === "SQUAD"
                 ? "bg-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.4)]"
                 : "text-slate-400 hover:text-white bg-white/5 border border-white/5"
@@ -399,36 +403,29 @@ export const App: React.FC = () => {
             🛡️ My Squad & XI
           </button>
         </div>
-
-        <button
-          onClick={() => setShowDatabaseModal(true)}
-          className="text-orange-400 font-bold hover:text-orange-300 transition uppercase tracking-widest text-[11px] flex items-center gap-1.5"
-        >
-          🔍 Player Database
-        </button>
       </div>
 
       {/* WebRTC Voice Channel Status Bar */}
-      <div className="px-6 pt-3">
+      <div className="px-3 sm:px-6 pt-2 sm:pt-3">
         <VoiceChat socket={socket} roomId={room.id} userId={userId} enabled={micEnabled} />
       </div>
 
       {/* Tab Content */}
       {activeTab === "AUCTION" ? (
-        <main className="flex-1 p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-[1600px] mx-auto w-full bg-[radial-gradient(circle_at_center,_#111827_0%,_#050810_100%)]">
-          {/* Left: Upcoming Players Queue */}
-          <div className="lg:col-span-3">
-            <UpcomingPlayers room={room} />
-          </div>
-
-          {/* Center: Showcase Card + Bidding Actions */}
-          <div className="lg:col-span-6 space-y-6">
+        <main className="flex-1 p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 max-w-[1600px] mx-auto w-full bg-[radial-gradient(circle_at_center,_#111827_0%,_#050810_100%)]">
+          {/* Center (Order 1 on mobile, Order 2 on desktop): Showcase Card + Bidding Actions */}
+          <div className="order-1 lg:order-2 lg:col-span-6 space-y-4 sm:space-y-6">
             <PlayerAuctionCard player={room.currentPlayer} room={room} onReturnHome={handleReturnHome} />
             <BidActionBar room={room} currentUserId={userId} onPlaceBid={handlePlaceBid} />
           </div>
 
-          {/* Right: Team Purses + Chat */}
-          <div className="lg:col-span-3 space-y-6">
+          {/* Left (Order 2 on mobile, Order 1 on desktop): Other Teams' and Franchises' Purchased Players */}
+          <div className="order-2 lg:order-1 lg:col-span-3">
+            <TeamsPurchasedPlayers room={room} currentUserId={userId} />
+          </div>
+
+          {/* Right (Order 3 on mobile, Order 3 on desktop): Team Purses + Chat */}
+          <div className="order-3 lg:order-3 lg:col-span-3 space-y-4 sm:space-y-6">
             <TeamPursesSidebar room={room} currentUserId={userId} />
             <AuctionChat messages={chatMessages} onSendMessage={handleSendChatMessage} />
           </div>
@@ -438,16 +435,10 @@ export const App: React.FC = () => {
           room={room}
           currentUserId={userId}
           onOpenAnalysis={() => setShowAnalysisModal(true)}
-          onOpenDatabase={() => setShowDatabaseModal(true)}
         />
       )}
 
       {/* Modals */}
-      <PlayerDatabaseModal
-        isOpen={showDatabaseModal}
-        onClose={() => setShowDatabaseModal(false)}
-      />
-
       <TeamAnalysisModal
         isOpen={showAnalysisModal}
         roomId={room.id}

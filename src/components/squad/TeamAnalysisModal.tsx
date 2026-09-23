@@ -48,45 +48,45 @@ export const TeamAnalysisModal: React.FC<Props> = ({ isOpen, roomId, onClose }) 
         </div>
 
         {loading ? (
-          <div className="flex flex-1 items-center justify-center text-slate-400">
+          <div className="flex flex-1 items-center justify-center text-slate-400 p-8 text-center text-sm">
             Calculating cricket rating scores & Best XIs...
           </div>
         ) : (
-          <div className="flex flex-1 overflow-hidden">
-            {/* Left Sidebar: Team Rankings List */}
-            <div className="w-1/3 border-r border-slate-800 bg-slate-950/60 p-4 overflow-y-auto space-y-2">
-              <h3 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Franchise Leaderboard</h3>
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
+            {/* Left Sidebar: Team Rankings List (Horizontal on mobile, vertical on desktop) */}
+            <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-950/60 p-3 sm:p-4 overflow-x-auto md:overflow-y-auto space-y-0 md:space-y-2 flex md:flex-col gap-2 shrink-0">
+              <h3 className="hidden md:block text-xs font-bold text-amber-400 uppercase tracking-wider mb-2">Franchise Leaderboard</h3>
               {rankings.map((t, idx) => (
                 <div
                   key={t.userId}
                   onClick={() => setActiveTab(idx)}
-                  className={`flex items-center justify-between rounded-xl border p-3 text-xs cursor-pointer transition ${
+                  className={`flex items-center justify-between rounded-xl border p-2.5 sm:p-3 text-xs cursor-pointer transition shrink-0 min-w-[140px] md:min-w-0 ${
                     activeTab === idx
                       ? "border-amber-500 bg-amber-950/30 text-amber-300 font-bold"
                       : "border-slate-800 bg-slate-900/40 text-slate-300 hover:bg-slate-800/60"
                   }`}
                 >
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-slate-500 font-bold">#{idx + 1}</span>
-                    <span className="truncate">{t.teamName}</span>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span className="font-mono text-slate-500 font-bold text-[11px] sm:text-xs">#{idx + 1}</span>
+                    <span className="truncate max-w-[90px] md:max-w-none">{t.teamName}</span>
                   </div>
-                  <span className="font-extrabold text-emerald-400">{t.overallScore}/100</span>
+                  <span className="font-extrabold text-emerald-400 text-[11px] sm:text-xs ml-2">{t.overallScore}/100</span>
                 </div>
               ))}
             </div>
 
             {/* Right: Detailed Breakdown */}
             {currentTeam && (
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-6">
                 {/* Score Spotlight */}
-                <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 p-5 flex items-center justify-between">
+                <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h3 className="text-2xl font-black text-white">{currentTeam.teamName}</h3>
+                    <h3 className="text-xl sm:text-2xl font-black text-white">{currentTeam.teamName}</h3>
                     <p className="text-xs text-amber-300 font-semibold mt-1">{currentTeam.verdict}</p>
                   </div>
-                  <div className="text-center bg-slate-950/80 rounded-2xl border border-amber-500/40 px-5 py-3 shadow-lg">
+                  <div className="text-center bg-slate-950/80 rounded-2xl border border-amber-500/40 px-4 sm:px-5 py-2.5 sm:py-3 shadow-lg">
                     <div className="text-[10px] text-slate-400 uppercase font-bold">Overall Score</div>
-                    <div className="text-3xl font-black text-amber-400">{currentTeam.overallScore}</div>
+                    <div className="text-2xl sm:text-3xl font-black text-amber-400">{currentTeam.overallScore}</div>
                   </div>
                 </div>
 

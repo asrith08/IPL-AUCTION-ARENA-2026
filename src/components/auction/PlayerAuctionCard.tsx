@@ -197,12 +197,12 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
       )}
 
       {/* Main Card Content */}
-      <div className="p-6 sm:p-8 flex flex-col md:flex-row gap-6 sm:gap-8">
+      <div className="p-4 sm:p-8 flex flex-col md:flex-row gap-4 sm:gap-8">
         {/* Left: Player Avatar Container */}
-        <div className="w-full md:w-48 h-56 md:h-64 bg-[#1A2333] rounded-2xl flex-shrink-0 border-4 border-[#1A2333] shadow-inner flex flex-col items-center justify-center overflow-hidden relative group">
+        <div className="w-full md:w-48 h-48 sm:h-56 md:h-64 bg-[#1A2333] rounded-2xl flex-shrink-0 border-4 border-[#1A2333] shadow-inner flex flex-col items-center justify-center overflow-hidden relative group">
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/70"></div>
           
-          <div className="text-5xl font-black italic text-orange-400 tracking-tighter z-10">
+          <div className="text-4xl sm:text-5xl font-black italic text-orange-400 tracking-tighter z-10">
             {player.name
               .split(" ")
               .map((n) => n[0])
@@ -222,8 +222,8 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
         </div>
 
         {/* Right: Info & Pricing */}
-        <div className="flex-1 flex flex-col justify-center">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+        <div className="flex-1 flex flex-col justify-center min-w-0">
+          <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-3">
             <span className="inline-block px-3 py-1 bg-orange-500 text-black text-[10px] font-black uppercase rounded-full">
               {player.setName}
             </span>
@@ -232,11 +232,11 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-4xl font-black italic tracking-tighter text-white mb-1">
+          <h2 className="text-2xl sm:text-4xl font-black italic tracking-tighter text-white mb-1 break-words">
             {player.name}
           </h2>
 
-          <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-5">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 sm:mb-5">
             <span>
               Role:{" "}
               <span className="text-white">
@@ -257,14 +257,14 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
           </div>
 
           {/* Price Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/5 p-3.5 rounded-xl border border-white/5">
-              <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Base Price</p>
-              <p className="text-xl sm:text-2xl font-black text-white">₹{player.basePrice.toFixed(2)} Cr</p>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            <div className="bg-white/5 p-3 sm:p-3.5 rounded-xl border border-white/5">
+              <p className="text-[10px] text-slate-400 uppercase font-bold mb-0.5 sm:mb-1">Base Price</p>
+              <p className="text-lg sm:text-2xl font-black text-white">₹{player.basePrice.toFixed(2)} Cr</p>
             </div>
-            <div className="bg-white/5 p-3.5 rounded-xl border border-white/5">
-              <p className="text-[10px] text-slate-400 uppercase font-bold mb-1">Current Bid</p>
-              <p className="text-xl sm:text-2xl font-black text-orange-500">
+            <div className="bg-white/5 p-3 sm:p-3.5 rounded-xl border border-white/5">
+              <p className="text-[10px] text-slate-400 uppercase font-bold mb-0.5 sm:mb-1">Current Bid</p>
+              <p className="text-lg sm:text-2xl font-black text-orange-500">
                 ₹{room.currentBid.toFixed(2)} Cr
               </p>
             </div>
@@ -273,10 +273,10 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
       </div>
 
       {/* Bottom Closing / Timer & Highest Bidder Section */}
-      <div className="px-6 sm:px-8 py-4 bg-black/40 border-t border-white/5 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+      <div className="px-4 sm:px-8 py-3 sm:py-4 bg-black/40 border-t border-white/5 flex flex-wrap items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div
-            className={`w-12 h-12 rounded-full border-2 flex items-center justify-center text-xl font-black transition-all ${
+            className={`w-11 h-11 sm:w-12 sm:h-12 shrink-0 rounded-full border-2 flex items-center justify-center text-lg sm:text-xl font-black transition-all ${
               isUrgent
                 ? "border-red-500 text-red-500 animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.5)]"
                 : "border-orange-500 text-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.3)]"
@@ -288,52 +288,52 @@ export const PlayerAuctionCard: React.FC<Props> = ({ player, room, onReturnHome 
             <p className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
               {isUrgent ? "GOING ONCE..." : "Closing in..."}
             </p>
-            <p className="text-sm font-bold text-white uppercase italic">
+            <p className="text-xs sm:text-sm font-bold text-white uppercase italic truncate max-w-[200px] sm:max-w-none">
               High Bidder: <span className="text-orange-400">{room.highestBidderTeam || "None (Base)"}</span>
             </p>
           </div>
         </div>
 
         {/* Evaluation Metrics Mini-Grid */}
-        <div className="flex gap-6 text-center border-l border-white/10 pl-6">
+        <div className="flex items-center justify-around sm:justify-start gap-4 sm:gap-6 text-center border-t sm:border-t-0 sm:border-l border-white/10 pt-2 sm:pt-0 sm:pl-6 w-full sm:w-auto">
           <div>
             <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em] mb-0.5">Bat</p>
-            <p className="text-lg font-black italic text-amber-400">{player.battingRating}</p>
+            <p className="text-base sm:text-lg font-black italic text-amber-400">{player.battingRating}</p>
           </div>
           <div>
             <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em] mb-0.5">Bowl</p>
-            <p className="text-lg font-black italic text-blue-400">{player.bowlingRating}</p>
+            <p className="text-base sm:text-lg font-black italic text-blue-400">{player.bowlingRating}</p>
           </div>
           <div>
             <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em] mb-0.5">Impact</p>
-            <p className="text-lg font-black italic text-emerald-400">{player.impactRating}</p>
+            <p className="text-base sm:text-lg font-black italic text-emerald-400">{player.impactRating}</p>
           </div>
           <div>
             <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em] mb-0.5">Overall</p>
-            <p className="text-lg font-black italic text-purple-400">{player.overallRating}</p>
+            <p className="text-base sm:text-lg font-black italic text-purple-400">{player.overallRating}</p>
           </div>
         </div>
       </div>
 
       {/* Footer Career Statistics Bar */}
-      <div className="px-6 sm:px-8 py-3 bg-[#080C16] border-t border-white/5 grid grid-cols-4 gap-2 text-center">
+      <div className="px-4 sm:px-8 py-2.5 sm:py-3 bg-[#080C16] border-t border-white/5 grid grid-cols-4 gap-2 text-center">
         <div>
-          <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Matches</p>
-          <p className="text-sm font-black italic text-white">{player.stats.matches}</p>
+          <p className="text-[8px] sm:text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Matches</p>
+          <p className="text-xs sm:text-sm font-black italic text-white">{player.stats.matches}</p>
         </div>
         <div>
-          <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Runs</p>
-          <p className="text-sm font-black italic text-white">{player.stats.runs}</p>
+          <p className="text-[8px] sm:text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Runs</p>
+          <p className="text-xs sm:text-sm font-black italic text-white">{player.stats.runs}</p>
         </div>
         <div>
-          <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">SR / Avg</p>
-          <p className="text-sm font-black italic text-orange-400">
+          <p className="text-[8px] sm:text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">SR / Avg</p>
+          <p className="text-xs sm:text-sm font-black italic text-orange-400">
             {player.stats.strikeRate} / {player.stats.battingAverage}
           </p>
         </div>
         <div>
-          <p className="text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Wickets</p>
-          <p className="text-sm font-black italic text-white">{player.stats.wickets}</p>
+          <p className="text-[8px] sm:text-[9px] uppercase font-bold text-slate-500 tracking-[0.2em]">Wickets</p>
+          <p className="text-xs sm:text-sm font-black italic text-white">{player.stats.wickets}</p>
         </div>
       </div>
     </div>

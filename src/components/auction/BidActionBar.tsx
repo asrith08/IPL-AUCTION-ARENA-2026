@@ -59,9 +59,9 @@ export const BidActionBar: React.FC<Props> = ({ room, currentUserId, onPlaceBid 
   else if (insufficientPurse) disabledReason = `Insufficient purse! Need ₹${nextBidAmount.toFixed(2)} Cr`;
 
   return (
-    <div className="bg-[#0D121F] border border-white/10 rounded-2xl p-5 shadow-2xl space-y-4">
+    <div className="bg-[#0D121F] border border-white/10 rounded-2xl p-4 sm:p-5 shadow-2xl space-y-4">
       {disabledReason && !canBid && (
-        <div className="flex items-center gap-2 rounded-xl bg-orange-950/30 border border-orange-500/30 px-4 py-2.5 text-xs font-bold text-orange-400 uppercase tracking-wider">
+        <div className="flex items-center gap-2 rounded-xl bg-orange-950/30 border border-orange-500/30 px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold text-orange-400 uppercase tracking-wider">
           <AlertCircle className="h-4 w-4 shrink-0 text-orange-500" />
           <span>{disabledReason}</span>
         </div>
@@ -70,39 +70,39 @@ export const BidActionBar: React.FC<Props> = ({ room, currentUserId, onPlaceBid 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="text-[10px] uppercase font-bold text-slate-500 tracking-[0.2em] mb-0.5">Your Franchise Purse</div>
-          <div className="text-xl font-black text-green-400 italic">
+          <div className="text-lg sm:text-xl font-black text-green-400 italic">
             ₹{participant.purseRemaining.toFixed(2)} Cr <span className="text-xs font-bold text-slate-400 uppercase italic">remaining</span>
           </div>
         </div>
 
         {/* Action Bidding Buttons */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="w-full sm:w-auto flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3">
           {/* Main Quick Bid Button with Neon Glow */}
           <button
             onClick={() => onPlaceBid(nextBidAmount)}
             disabled={!canBid}
-            className="px-8 py-3.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-sm font-black uppercase tracking-wider shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all transform active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none flex items-center gap-2"
+            className="flex-1 sm:flex-initial justify-center px-4 sm:px-8 py-3 sm:py-3.5 bg-orange-500 hover:bg-orange-400 text-black rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all transform active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:shadow-none flex items-center gap-2 min-w-[140px]"
           >
-            <Gavel className="h-4 w-4" />
-            BID ₹{nextBidAmount.toFixed(2)} Cr
+            <Gavel className="h-4 w-4 shrink-0" />
+            <span>BID ₹{nextBidAmount.toFixed(2)} Cr</span>
           </button>
 
           {/* Aggressive Raise Buttons */}
           {canBid && (
-            <>
+            <div className="flex items-center gap-2 flex-1 sm:flex-initial">
               <button
                 onClick={() => onPlaceBid(Math.round((nextBidAmount + 0.5) * 100) / 100)}
-                className="px-5 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                className="flex-1 sm:flex-initial px-3 sm:px-5 py-3 sm:py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all text-center whitespace-nowrap"
               >
                 + ₹0.50 Cr
               </button>
               <button
                 onClick={() => onPlaceBid(Math.round((nextBidAmount + 1.0) * 100) / 100)}
-                className="px-5 py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-xs font-black uppercase tracking-wider transition-all"
+                className="flex-1 sm:flex-initial px-3 sm:px-5 py-3 sm:py-3.5 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl text-[11px] sm:text-xs font-black uppercase tracking-wider transition-all text-center whitespace-nowrap"
               >
                 + ₹1.00 Cr
               </button>
-            </>
+            </div>
           )}
         </div>
       </div>

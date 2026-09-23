@@ -29,37 +29,38 @@ export const AuctionHeader: React.FC<Props> = ({
   const participantCount = Object.keys(room.participants).length;
 
   return (
-    <header className="h-16 flex items-center justify-between px-6 sm:px-8 bg-[#0D121F] border-b border-white/10 shadow-2xl z-20">
+    <header className="min-h-16 py-2.5 px-3 sm:px-8 flex flex-wrap items-center justify-between gap-3 bg-[#0D121F] border-b border-white/10 shadow-2xl z-20">
       {/* Left Branding */}
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 bg-gradient-to-tr from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.4)]">
-          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 bg-gradient-to-tr from-orange-500 to-red-600 rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(249,115,22,0.4)]">
+          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
         <div>
-          <h1 className="text-lg sm:text-xl font-black tracking-tighter uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
+          <h1 className="text-base sm:text-xl font-black tracking-tighter uppercase italic text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-400">
             {room.name || "Auction Arena Pro"}
           </h1>
-          <p className="text-[10px] uppercase tracking-widest text-orange-500 font-bold">
-            IPL 2026 Live Session • {room.status}
+          <p className="text-[10px] uppercase tracking-widest text-orange-500 font-bold flex flex-wrap items-center gap-x-2">
+            <span>IPL 2026 • {room.status}</span>
+            <span className="text-slate-400 font-mono sm:hidden">Code: <span className="text-orange-400">{room.code || room.id}</span></span>
           </p>
         </div>
       </div>
 
       {/* Right Controls & Room Status */}
-      <div className="flex items-center gap-4 sm:gap-6">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-[10px] uppercase text-slate-500 font-semibold tracking-wider">Room Code</span>
-          <span className="text-xs sm:text-sm font-mono text-orange-400 font-bold">{room.id}</span>
+          <span className="text-xs sm:text-sm font-mono text-orange-400 font-bold">{room.code || room.id}</span>
         </div>
 
         {/* Audio & Mic controls */}
-        <div className="flex gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             onClick={onToggleSound}
             title="Toggle Sound Effects"
-            className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all uppercase border ${
+            className={`px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-bold transition-all uppercase border ${
               soundEnabled
                 ? "bg-orange-500/10 border-orange-500/40 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]"
                 : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
@@ -71,35 +72,35 @@ export const AuctionHeader: React.FC<Props> = ({
           <button
             onClick={onToggleMic}
             title="Toggle Voice Mic"
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all uppercase border ${
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-md text-xs font-bold transition-all uppercase border ${
               micEnabled
                 ? "bg-green-500/10 border-green-500/40 text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.2)]"
                 : "bg-white/5 border-white/10 text-slate-400 hover:bg-white/10"
             }`}
           >
             {micEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-            <span className="hidden md:inline">{micEnabled ? "Mic On" : "Muted"}</span>
+            <span className="hidden sm:inline">{micEnabled ? "Mic On" : "Muted"}</span>
           </button>
         </div>
 
         {/* Host Admin Controls */}
         {isHost && (
-          <div className="flex gap-2 border-l border-white/10 pl-4">
+          <div className="flex items-center gap-1.5 sm:gap-2 border-l border-white/10 pl-2 sm:pl-4">
             {room.status === "COMPLETED" || room.status === "ENDED" ? (
-              <span className="px-3.5 py-1.5 bg-red-950/40 border border-red-500/30 text-red-400 rounded-md text-xs font-bold uppercase tracking-wider">
+              <span className="px-2.5 sm:px-3.5 py-1.5 bg-red-950/40 border border-red-500/30 text-red-400 rounded-md text-[11px] sm:text-xs font-bold uppercase tracking-wider">
                 Auction Ended
               </span>
             ) : room.status === "PAUSED" ? (
               <>
                 <button
                   onClick={onResumeAuction}
-                  className="px-3.5 py-1.5 bg-green-600/20 border border-green-500/50 text-green-400 rounded-md text-xs font-bold hover:bg-green-600/30 transition-colors uppercase flex items-center gap-1"
+                  className="px-2.5 sm:px-3.5 py-1.5 bg-green-600/20 border border-green-500/50 text-green-400 rounded-md text-[11px] sm:text-xs font-bold hover:bg-green-600/30 transition-colors uppercase flex items-center gap-1"
                 >
                   <Play className="h-3.5 w-3.5" /> Resume
                 </button>
                 <button
                   onClick={onEndAuction}
-                  className="px-3.5 py-1.5 bg-red-600/20 border border-red-600/50 text-red-500 rounded-md text-xs font-bold hover:bg-red-600/30 transition-colors uppercase flex items-center gap-1"
+                  className="px-2.5 sm:px-3.5 py-1.5 bg-red-600/20 border border-red-600/50 text-red-500 rounded-md text-[11px] sm:text-xs font-bold hover:bg-red-600/30 transition-colors uppercase flex items-center gap-1"
                 >
                   <Square className="h-3.5 w-3.5" /> End
                 </button>
@@ -108,13 +109,13 @@ export const AuctionHeader: React.FC<Props> = ({
               <>
                 <button
                   onClick={onPauseAuction}
-                  className="px-3.5 py-1.5 bg-white/5 border border-white/10 text-slate-300 rounded-md text-xs font-bold hover:bg-white/10 transition-colors uppercase flex items-center gap-1"
+                  className="px-2.5 sm:px-3.5 py-1.5 bg-white/5 border border-white/10 text-slate-300 rounded-md text-[11px] sm:text-xs font-bold hover:bg-white/10 transition-colors uppercase flex items-center gap-1"
                 >
                   <Pause className="h-3.5 w-3.5" /> Pause
                 </button>
                 <button
                   onClick={onEndAuction}
-                  className="px-3.5 py-1.5 bg-red-600/20 border border-red-600/50 text-red-500 rounded-md text-xs font-bold hover:bg-red-600/30 transition-colors uppercase flex items-center gap-1"
+                  className="px-2.5 sm:px-3.5 py-1.5 bg-red-600/20 border border-red-600/50 text-red-500 rounded-md text-[11px] sm:text-xs font-bold hover:bg-red-600/30 transition-colors uppercase flex items-center gap-1"
                 >
                   <Square className="h-3.5 w-3.5" /> End
                 </button>
@@ -124,7 +125,7 @@ export const AuctionHeader: React.FC<Props> = ({
         )}
 
         {/* Online Indicator Badge */}
-        <div className="flex items-center gap-2.5 ml-2 border-l border-white/10 pl-4">
+        <div className="flex items-center gap-2 border-l border-white/10 pl-2 sm:pl-4">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]"></div>
           <span className="text-xs font-bold text-slate-200">{participantCount}/10 Online</span>
         </div>

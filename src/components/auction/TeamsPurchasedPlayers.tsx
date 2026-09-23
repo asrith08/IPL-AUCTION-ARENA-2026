@@ -37,7 +37,7 @@ export const TeamsPurchasedPlayers: React.FC<Props> = ({ room, currentUserId }) 
   };
 
   return (
-    <aside className="bg-[#080C16] border border-white/5 rounded-2xl flex flex-col p-3.5 sm:p-4 gap-3 shadow-xl h-full max-h-[500px] lg:max-h-[820px]">
+    <aside className="bg-[#080C16] border border-white/5 rounded-2xl flex flex-col p-4 gap-3 shadow-xl h-full max-h-[820px]">
       <div className="flex items-center justify-between border-b border-white/5 pb-3">
         <div>
           <h3 className="text-[10px] uppercase font-black text-slate-400 tracking-[0.2em] flex items-center gap-1.5">

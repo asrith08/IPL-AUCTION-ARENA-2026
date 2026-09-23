@@ -6,14 +6,13 @@ interface Props {
   room: Room;
   currentUserId: string;
   onOpenAnalysis: () => void;
-  onOpenDatabase: () => void;
+  onOpenDatabase?: () => void;
 }
 
 export const SquadView: React.FC<Props> = ({
   room,
   currentUserId,
   onOpenAnalysis,
-  onOpenDatabase,
 }) => {
   const participant = room.participants[currentUserId];
   const [selectedXIIds, setSelectedXIIds] = useState<string[]>([]);
@@ -33,38 +32,40 @@ export const SquadView: React.FC<Props> = ({
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
+    <div className="max-w-6xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Franchise Summary Header */}
-      <div className="rounded-[2rem] border border-white/10 bg-[#0D121F] p-8 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="rounded-2xl sm:rounded-[2rem] border border-white/10 bg-[#0D121F] p-4 sm:p-8 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
         <div>
           <div className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-[10px] font-black text-orange-400 border border-orange-500/30 uppercase tracking-widest mb-2">
             <Trophy className="h-3.5 w-3.5" /> FRANCHISE SQUAD HUB
           </div>
-          <h1 className="text-3xl font-black italic tracking-tighter uppercase text-white">{participant.teamName}</h1>
+          <h1 className="text-2xl sm:text-3xl font-black italic tracking-tighter uppercase text-white">{participant.teamName}</h1>
           <p className="text-xs text-slate-400 mt-1">
             Manager: <span className="text-orange-400 font-bold">{participant.managerName}</span> • Total Spent: ₹{participant.purseSpent.toFixed(2)} Cr
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="text-right pr-4 border-r border-white/10">
-            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Purse Left</div>
-            <div className="text-xl font-black font-mono text-green-400">₹{participant.purseRemaining.toFixed(2)} Cr</div>
-          </div>
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 sm:gap-4">
+          <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center sm:gap-4 bg-white/5 sm:bg-transparent p-3 sm:p-0 rounded-xl sm:rounded-none">
+            <div className="text-center sm:text-right pr-2 sm:pr-4 border-r border-white/10">
+              <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-widest">Purse Left</div>
+              <div className="text-sm sm:text-xl font-black font-mono text-green-400">₹{participant.purseRemaining.toFixed(2)} Cr</div>
+            </div>
 
-          <div className="text-right pr-4 border-r border-white/10">
-            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Squad Count</div>
-            <div className="text-xl font-black font-mono text-white">{squad.length} / {room.settings.maxSquadSize}</div>
-          </div>
+            <div className="text-center sm:text-right pr-2 sm:pr-4 border-r border-white/10">
+              <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-widest">Squad</div>
+              <div className="text-sm sm:text-xl font-black font-mono text-white">{squad.length} / {room.settings.maxSquadSize}</div>
+            </div>
 
-          <div className="text-right pr-4 border-r border-white/10">
-            <div className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Overseas</div>
-            <div className="text-xl font-black font-mono text-blue-400">{overseasCount} / 8 OS</div>
+            <div className="text-center sm:text-right sm:pr-4 sm:border-r border-white/10">
+              <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase font-bold tracking-widest">Overseas</div>
+              <div className="text-sm sm:text-xl font-black font-mono text-blue-400">{overseasCount} / 8 OS</div>
+            </div>
           </div>
 
           <button
             onClick={onOpenAnalysis}
-            className="flex items-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-black px-5 py-3 text-xs font-black uppercase italic tracking-wider shadow-[0_0_15px_rgba(249,115,22,0.4)] transition"
+            className="flex items-center justify-center gap-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-black px-4 sm:px-5 py-2.5 sm:py-3 text-xs font-black uppercase italic tracking-wider shadow-[0_0_15px_rgba(249,115,22,0.4)] transition w-full sm:w-auto"
           >
             <BarChart2 className="h-4 w-4" />
             ANALYZE TEAM & RANKINGS
@@ -77,13 +78,6 @@ export const SquadView: React.FC<Props> = ({
         <span className="text-slate-300 font-bold uppercase tracking-wider text-[11px]">
           Custom Playing XI ({selectedXIIds.length}/11 Selected)
         </span>
-
-        <button
-          onClick={onOpenDatabase}
-          className="text-orange-400 font-bold hover:text-orange-300 transition uppercase tracking-widest text-[11px]"
-        >
-          + Browse All Players Database
-        </button>
       </div>
 
       {/* Squad Players Grid */}

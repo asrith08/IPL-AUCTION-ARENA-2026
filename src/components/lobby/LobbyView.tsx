@@ -55,24 +55,24 @@ export const LobbyView: React.FC<Props> = ({
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
+    <div className="max-w-5xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#0D121F] p-8 shadow-2xl">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-[2rem] border border-white/10 bg-[#0D121F] p-4 sm:p-8 shadow-2xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-3.5 py-1 text-[10px] font-black text-orange-400 border border-orange-500/30 uppercase tracking-widest mb-3">
+            <div className="inline-flex items-center gap-2 rounded-full bg-orange-500/10 px-3.5 py-1 text-[10px] font-black text-orange-400 border border-orange-500/30 uppercase tracking-widest mb-2 sm:mb-3">
               <Shield className="h-3.5 w-3.5" /> AUCTION LOBBY
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black italic tracking-tighter uppercase text-white">{room.name}</h1>
-            <p className="text-xs text-slate-400 mt-2 font-mono">
+            <h1 className="text-2xl sm:text-4xl font-black italic tracking-tighter uppercase text-white break-words">{room.name}</h1>
+            <p className="text-xs text-slate-400 mt-1 sm:mt-2 font-mono">
               Room Code: <span className="text-orange-400 font-bold">{room.code}</span> • Status: <span className="text-green-400 font-bold uppercase">{room.status}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <button
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-white/10 transition"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-white/10 transition whitespace-nowrap"
             >
               <Copy className="h-4 w-4 text-orange-400" />
               {copied ? "Copied!" : "Copy Link"}
@@ -80,7 +80,7 @@ export const LobbyView: React.FC<Props> = ({
 
             <button
               onClick={handleWhatsAppShare}
-              className="inline-flex items-center gap-2 rounded-xl bg-green-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-green-500 transition shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 rounded-xl bg-green-600 px-3.5 sm:px-4 py-2 sm:py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-green-500 transition shadow-[0_0_15px_rgba(34,197,94,0.3)] whitespace-nowrap"
             >
               <Share2 className="h-4 w-4" />
               WhatsApp Share

@@ -43,8 +43,8 @@ export const CreateRoomModal: React.FC<Props> = ({ isOpen, onClose, onCreate }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-fadeIn">
-      <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-3 sm:p-4 backdrop-blur-md animate-fadeIn">
+      <div className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 text-slate-100 shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-800 bg-slate-950 p-5">
           <h2 className="text-xl font-bold text-amber-400">Create IPL Auction Room</h2>
           <button
