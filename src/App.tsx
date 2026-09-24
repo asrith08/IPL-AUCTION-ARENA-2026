@@ -49,14 +49,49 @@ export const App: React.FC = () => {
   // Sound & WebRTC Voice States
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [micEnabled, setMicEnabled] = useState(false);
+  const [socketConnected, setSocketConnected] = useState(false);
+
+  const API_BASE =
+    import.meta.env.VITE_BACKEND_URL ||
+    import.meta.env.VITE_API_URL ||
+    "";
+
+  // Initial load room check
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    let targetRoomId = params.get("room");
+    if (!targetRoomId && typeof window !== "undefined") {
+      targetRoomId = localStorage.getItem("ipl_auction_active_room_id");
+    }
+    if (targetRoomId) {
+      fetch(`${API_BASE}/api/rooms/${targetRoomId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((initialRoom: Room | null) => {
+          if (initialRoom) {
+            setRoom(initialRoom);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [API_BASE]);
 
   // Socket Connection Setup
   useEffect(() => {
-    const s = io(window.location.origin, {
+    const socketUrl =
+      import.meta.env.VITE_SOCKET_URL ||
+      import.meta.env.VITE_BACKEND_URL ||
+      (typeof window !== "undefined" ? window.location.origin : "");
+
+    const s = io(socketUrl, {
       transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 15,
+      reconnectionDelay: 1000,
+      timeout: 10000,
     });
 
     s.on("connect", () => {
+      setSocketConnected(true);
       console.log("Connected to IPL Auction Socket Server");
 
       const params = new URLSearchParams(window.location.search);
@@ -89,6 +124,15 @@ export const App: React.FC = () => {
           window.history.replaceState({}, "", `${window.location.pathname}?room=${targetRoomId}`);
         }
       }
+    });
+
+    s.on("disconnect", () => {
+      setSocketConnected(false);
+    });
+
+    s.on("connect_error", (err) => {
+      setSocketConnected(false);
+      console.warn("Socket.IO connection attempt, fallback sync active:", err.message);
     });
 
     s.on("room:state", (updatedRoom: Room) => {
@@ -140,6 +184,79 @@ export const App: React.FC = () => {
     };
   }, [userId]);
 
+  // HTTP Fallback Polling when WebSockets are unavailable (e.g. serverless Vercel runtime)
+  useEffect(() => {
+    if (!room?.id || socketConnected) return;
+
+    let isMounted = true;
+    const interval = setInterval(() => {
+      fetch(`${API_BASE}/api/rooms/${room.id}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((latestRoom: Room | null) => {
+          if (!isMounted || !latestRoom) return;
+          // Play bid sound if bid increased
+          if (latestRoom.currentBid > (room?.currentBid || 0)) {
+            auctionSounds.playBid();
+          }
+          // Play sound if status changed to SOLD or UNSOLD
+          if (latestRoom.status === "SOLD" && room.status !== "SOLD") {
+            auctionSounds.playSold();
+          } else if (latestRoom.status === "UNSOLD" && room.status !== "UNSOLD") {
+            auctionSounds.playUnsold();
+          }
+          setRoom(latestRoom);
+        })
+        .catch(() => {});
+    }, room.status === "BIDDING" ? 1000 : 2000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [room?.id, room?.currentBid, room?.status, socketConnected, API_BASE]);
+
+  // Action Dispatcher (Socket.IO with HTTP Fallback)
+  const dispatchAuctionAction = async (action: string, payload: Record<string, any> = {}) => {
+    if (socket && socket.connected && room) {
+      if (action === "start") socket.emit("auction:start", { roomId: room.id, hostId: userId, ...payload });
+      else if (action === "pause") socket.emit("auction:pause", { roomId: room.id, hostId: userId, ...payload });
+      else if (action === "resume") socket.emit("auction:resume", { roomId: room.id, hostId: userId, ...payload });
+      else if (action === "end") socket.emit("auction:end", { roomId: room.id, hostId: userId, ...payload });
+      else if (action === "kick") socket.emit("room:kick", { roomId: room.id, hostId: userId, ...payload });
+      else if (action === "bid") socket.emit("auction:bid", { roomId: room.id, userId, ...payload });
+      else if (action === "update_name") socket.emit("participant:update_name", { roomId: room.id, userId, ...payload });
+      else if (action === "chat") socket.emit("chat:send", { roomId: room.id, userId, ...payload });
+      return;
+    }
+
+    if (!room?.id) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/rooms/${room.id}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          userId,
+          ...payload,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.room) {
+          setRoom(data.room);
+          if (action === "bid" && data.bid) {
+            auctionSounds.playBid();
+          }
+        }
+        if (action === "chat" && data.message) {
+          setChatMessages((prev) => [...prev, data.message]);
+        }
+      }
+    } catch (e) {
+      console.error(`Failed to execute ${action}:`, e);
+    }
+  };
+
   // Handle Room Actions
   const handleCreateRoom = (data: {
     roomName: string;
@@ -151,7 +268,7 @@ export const App: React.FC = () => {
     maxSquadSize: number;
     timerDuration: number;
   }) => {
-    fetch("/api/rooms", {
+    fetch(`${API_BASE}/api/rooms`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -159,7 +276,18 @@ export const App: React.FC = () => {
         ...data,
       }),
     })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text();
+          let err = `Server returned status ${res.status}`;
+          try {
+            const j = JSON.parse(text);
+            if (j.error) err = j.error;
+          } catch {}
+          throw new Error(err);
+        }
+        return res.json();
+      })
       .then((createdRoom: Room) => {
         setShowCreateModal(false);
         if (typeof window !== "undefined") {
@@ -174,7 +302,9 @@ export const App: React.FC = () => {
           );
           window.history.replaceState({}, "", `${window.location.pathname}?room=${createdRoom.id}`);
         }
-        if (socket) {
+        setRoom(createdRoom);
+
+        if (socket && socket.connected) {
           socket.emit("room:join", {
             roomId: createdRoom.id,
             userId,
@@ -183,6 +313,9 @@ export const App: React.FC = () => {
             managerName: data.hostManagerName,
           });
         }
+      })
+      .catch((err) => {
+        console.error("Room creation error:", err);
       });
   };
 
@@ -206,7 +339,8 @@ export const App: React.FC = () => {
       );
       window.history.replaceState({}, "", `${window.location.pathname}?room=${data.roomId}`);
     }
-    if (socket) {
+
+    if (socket && socket.connected) {
       socket.emit("room:join", {
         roomId: data.roomId,
         userId,
@@ -214,31 +348,39 @@ export const App: React.FC = () => {
         teamName: data.teamName,
         managerName: data.managerName,
       });
+    } else {
+      fetch(`${API_BASE}/api/rooms/${data.roomId}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          userName: data.userName,
+          teamName: data.teamName,
+          managerName: data.managerName,
+        }),
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((joinedRoom: Room | null) => {
+          if (joinedRoom) setRoom(joinedRoom);
+        })
+        .catch(() => {});
     }
   };
 
   const handleStartAuction = () => {
-    if (socket && room) {
-      socket.emit("auction:start", { roomId: room.id, hostId: userId });
-    }
+    dispatchAuctionAction("start");
   };
 
   const handlePauseAuction = () => {
-    if (socket && room) {
-      socket.emit("auction:pause", { roomId: room.id, hostId: userId });
-    }
+    dispatchAuctionAction("pause");
   };
 
   const handleResumeAuction = () => {
-    if (socket && room) {
-      socket.emit("auction:resume", { roomId: room.id, hostId: userId });
-    }
+    dispatchAuctionAction("resume");
   };
 
   const handleEndAuction = () => {
-    if (socket && room) {
-      socket.emit("auction:end", { roomId: room.id, hostId: userId });
-    }
+    dispatchAuctionAction("end");
   };
 
   const handleReturnHome = () => {
@@ -252,9 +394,7 @@ export const App: React.FC = () => {
   };
 
   const handleKickParticipant = (targetUserId: string) => {
-    if (socket && room) {
-      socket.emit("room:kick", { roomId: room.id, hostId: userId, targetUserId });
-    }
+    dispatchAuctionAction("kick", { targetUserId });
   };
 
   const handleUpdateName = (data: {
@@ -262,36 +402,27 @@ export const App: React.FC = () => {
     teamName?: string;
     managerName?: string;
   }) => {
-    if (socket && room) {
-      const me = room.participants[userId];
-      if (typeof window !== "undefined") {
-        localStorage.setItem(
-          "ipl_auction_user_profile",
-          JSON.stringify({
-            userName: data.userName || me?.userName || "Guest Manager",
-            teamName: data.teamName || me?.teamName || "Guest XI",
-            managerName: data.managerName || me?.managerName || "Guest",
-          })
-        );
-      }
-      socket.emit("participant:update_name", {
-        roomId: room.id,
-        userId,
-        ...data,
-      });
+    if (!room) return;
+    const me = room.participants[userId];
+    if (typeof window !== "undefined") {
+      localStorage.setItem(
+        "ipl_auction_user_profile",
+        JSON.stringify({
+          userName: data.userName || me?.userName || "Guest Manager",
+          teamName: data.teamName || me?.teamName || "Guest XI",
+          managerName: data.managerName || me?.managerName || "Guest",
+        })
+      );
     }
+    dispatchAuctionAction("update_name", data);
   };
 
   const handlePlaceBid = (amount?: number) => {
-    if (socket && room) {
-      socket.emit("auction:bid", { roomId: room.id, userId, amount });
-    }
+    dispatchAuctionAction("bid", { amount });
   };
 
   const handleSendChatMessage = (text: string) => {
-    if (socket && room) {
-      socket.emit("chat:send", { roomId: room.id, userId, text });
-    }
+    dispatchAuctionAction("chat", { text });
   };
 
   // Toggle Sound Utility

@@ -1,7 +1,25 @@
 {
+  "version": 2,
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/api",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/socket.io/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/socket.io",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/((?!api|socket.io|assets|favicon.ico|.*\\..*).*)",
       "destination": "/index.html"
     }
   ]

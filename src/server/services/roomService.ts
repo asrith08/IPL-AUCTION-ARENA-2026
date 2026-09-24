@@ -8,11 +8,48 @@ import {
 } from "../../types/index.ts";
 import { MASTER_PLAYER_DATASET } from "../../data/players.ts";
 import { calculateBestXIAndAnalysis } from "./bestXIService.ts";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
+
+const STORAGE_FILE = path.join(os.tmpdir(), "ipl_auction_rooms_cache.json");
 
 export class RoomManager {
   private rooms: Map<string, Room> = new Map();
   private timers: Map<string, NodeJS.Timeout> = new Map();
   private transitionTimeouts: Map<string, NodeJS.Timeout> = new Map();
+
+  constructor() {
+    this.loadRoomsFromDisk();
+  }
+
+  private persistRoomsToDisk() {
+    try {
+      const data: Record<string, Room> = {};
+      for (const [id, room] of this.rooms.entries()) {
+        data[id] = room;
+      }
+      fs.writeFileSync(STORAGE_FILE, JSON.stringify(data), "utf-8");
+    } catch {
+      // Ignored if temporary storage is not writable
+    }
+  }
+
+  private loadRoomsFromDisk() {
+    try {
+      if (fs.existsSync(STORAGE_FILE)) {
+        const raw = fs.readFileSync(STORAGE_FILE, "utf-8");
+        const data = JSON.parse(raw);
+        for (const [id, room] of Object.entries(data)) {
+          if (!this.rooms.has(id)) {
+            this.rooms.set(id, room as Room);
+          }
+        }
+      }
+    } catch {
+      // Ignored
+    }
+  }
 
   private generateSquadAnalyses(room: Room) {
     const analyses = Object.values(room.participants).map((p) =>
@@ -150,14 +187,21 @@ export class RoomManager {
     };
 
     this.rooms.set(roomId, room);
+    this.persistRoomsToDisk();
     return room;
   }
 
   public getRoom(roomId: string): Room | undefined {
-    return this.rooms.get(roomId);
+    let room = this.rooms.get(roomId);
+    if (!room) {
+      this.loadRoomsFromDisk();
+      room = this.rooms.get(roomId);
+    }
+    return room;
   }
 
   public getAllPublicRooms(): Room[] {
+    this.loadRoomsFromDisk();
     return Array.from(this.rooms.values()).filter(
       (r) => r.isPublic && r.status !== "ENDED" && r.status !== "COMPLETED"
     );
@@ -170,7 +214,7 @@ export class RoomManager {
     teamName: string,
     managerName: string
   ): { room?: Room; error?: string } {
-    const room = this.rooms.get(roomId);
+    const room = this.getRoom(roomId);
     if (!room) return { error: "Room not found" };
 
     if (Object.keys(room.participants).length >= 10 && !room.participants[userId]) {
@@ -197,6 +241,7 @@ export class RoomManager {
       if (managerName && managerName !== "Guest") room.participants[userId].managerName = managerName;
     }
 
+    this.persistRoomsToDisk();
     return { room };
   }
 
@@ -346,7 +391,7 @@ export class RoomManager {
     teamName?: string,
     managerName?: string
   ): { room?: Room; error?: string } {
-    const room = this.rooms.get(roomId);
+    const room = this.getRoom(roomId);
     if (!room) return { error: "Room not found" };
 
     const participant = room.participants[userId];
@@ -356,6 +401,7 @@ export class RoomManager {
     if (teamName && teamName.trim()) participant.teamName = teamName.trim();
     if (managerName && managerName.trim()) participant.managerName = managerName.trim();
 
+    this.persistRoomsToDisk();
     return { room };
   }
 
@@ -365,7 +411,7 @@ export class RoomManager {
     userId: string,
     requestedAmount?: number
   ): { room?: Room; bid?: Bid; error?: string } {
-    const room = this.rooms.get(roomId);
+    const room = this.getRoom(roomId);
     if (!room) return { error: "Room not found" };
     if (room.status !== "BIDDING") return { error: "Bidding is not currently active" };
 
@@ -433,6 +479,7 @@ export class RoomManager {
     };
 
     room.history.push(bid);
+    this.persistRoomsToDisk();
     return { room, bid };
   }
 

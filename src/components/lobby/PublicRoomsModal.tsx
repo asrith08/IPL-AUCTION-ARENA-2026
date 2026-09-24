@@ -15,13 +15,20 @@ export const PublicRoomsModal: React.FC<Props> = ({ isOpen, onClose, onSelectRoo
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
-      fetch("/api/rooms")
-        .then((res) => res.json())
+      const apiBase = import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_API_URL || "";
+      fetch(`${apiBase}/api/rooms`)
+        .then((res) => {
+          if (!res.ok) return [];
+          return res.json();
+        })
         .then((data) => {
-          setRooms(data);
+          setRooms(Array.isArray(data) ? data : []);
           setLoading(false);
         })
-        .catch(() => setLoading(false));
+        .catch(() => {
+          setRooms([]);
+          setLoading(false);
+        });
     }
   }, [isOpen]);
 

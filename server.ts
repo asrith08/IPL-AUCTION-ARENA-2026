@@ -3,25 +3,15 @@ import http from "http";
 import path from "path";
 import { Server as SocketServer } from "socket.io";
 import { createServer as createViteServer } from "vite";
-import apiRoutes from "./src/server/routes/api.ts";
+import { Request, Response } from "express";
+import { createExpressApp } from "./src/server/app.ts";
 import { setupSocketHandler } from "./src/server/socket/handler.ts";
-import cors from "cors";
 
 async function startServer() {
-  const app = express();
+  const app = createExpressApp();
   const server = http.createServer(app);
 
-  // Enable CORS for Vercel frontend requests
-  app.use(cors({
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-  }));
-
-  const PORT = Number(process.env.PORT) || 3000;
-
-  // Middleware
-  app.use(express.json());
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
   // Socket.IO Server
   const io = new SocketServer(server, {
@@ -29,12 +19,10 @@ async function startServer() {
       origin: "*",
       methods: ["GET", "POST"],
     },
+    transports: ["websocket", "polling"],
   });
 
   setupSocketHandler(io);
-
-  // Express API Routes
-  app.use("/api", apiRoutes);
 
   // Development vs Production Frontend Integration
   if (process.env.NODE_ENV !== "production") {
@@ -44,11 +32,13 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    // Health check endpoint for Render backend
-    app.get("/", (req, res) => {
-      res.send("🏏 IPL Auction Arena Backend is Live!");
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
+    app.get("*", (_req: Request, res: Response) => {
+      res.sendFile(path.join(distPath, "index.html"));
     });
   }
+
   server.listen(PORT, "0.0.0.0", () => {
     console.log(`🏏 IPL Auction Arena Server listening on http://0.0.0.0:${PORT}`);
   });

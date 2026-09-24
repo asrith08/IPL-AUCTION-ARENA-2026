@@ -1,8 +1,29 @@
 import { Server, Socket } from "socket.io";
 import { roomManager } from "../services/roomService.ts";
-import { ChatMessage, Room } from "../../types/index.ts";
+import { Bid, ChatMessage, Room } from "../../types/index.ts";
+
+export let activeSocketIO: Server | null = null;
+
+export function broadcastRoomState(roomId: string, room: Room) {
+  if (activeSocketIO) {
+    activeSocketIO.to(roomId).emit("room:state", room);
+  }
+}
+
+export function broadcastBid(roomId: string, bid: Bid) {
+  if (activeSocketIO) {
+    activeSocketIO.to(roomId).emit("auction:bid_placed", bid);
+  }
+}
+
+export function broadcastChatMessage(roomId: string, msg: ChatMessage) {
+  if (activeSocketIO) {
+    activeSocketIO.to(roomId).emit("chat:message", msg);
+  }
+}
 
 export function setupSocketHandler(io: Server) {
+  activeSocketIO = io;
   io.on("connection", (socket: Socket) => {
     let currentRoomId: string | null = null;
     let currentUserId: string | null = null;
